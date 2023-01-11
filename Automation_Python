@@ -1,0 +1,140 @@
+import re
+import os
+import pandas as pd
+
+current_wd = os.getcwd()
+print(current_wd )
+
+# -----------------------------------------------------------------------------
+
+design_iterations = 6
+x = []
+for z in range(0, design_iterations, 1):
+    x.append(z)
+
+no_of_files = len(x)
+
+
+path1 = []
+for y in x:
+
+    var1 = "dp" + str(y)
+    dir_name = current_wd
+    filename2 = 'SYS'
+    filename3 = 'MECH'
+    a = os.path.join(dir_name, var1, filename2, filename3)
+    z = a + str('\\') + str('pf1.txt')
+
+    path1.append(z)
+
+
+# -------------------------------------------------------------------------------
+# wb = Workbook()
+# ws = wb.active
+# ws.title = "Data"
+# ------------------------------------------------------------------------------
+
+disp_x_direction = []
+disp_y_direction = []
+disp_z_direction = []
+bending_x_direction = []
+bending_y_direction = []
+bending_z_direction = []
+for t in path1:
+    file = open(t)
+    mac = file.readlines()
+    count = 0
+    for line in mac:
+        if mac[1]:
+            count = 1
+            if len(line) >= 103:
+                line_list = re.sub(r"[\([{})\]]", " ", line)
+                line_list1 = re.split(r"[,|:|\s]", line_list)
+                res = []
+                for ele in line_list1:
+                    if ele.strip():
+                        res.append(ele)
+                disp_x_direction.append(float(res[2]))
+                disp_y_direction.append(float(res[5]))
+                disp_z_direction.append(float(res[8]))
+                bending_x_direction.append(float(res[11]))
+                bending_y_direction.append(float(res[14]))
+                bending_z_direction.append(float(res[17]))  
+            else:
+                continue
+# ----------------------------------------------------------------------------------------------------------------------------------------------------------
+
+          
+no_of_modes = int((len(disp_x_direction) / no_of_files)) 
+m = no_of_modes         
+q = pd.DataFrame(list(zip(disp_x_direction, disp_y_direction, disp_z_direction, bending_x_direction, bending_y_direction, bending_z_direction)))
+# print(q)
+
+y = 0
+global_list = []
+for i in (x):
+    z = q.iloc[y :y + m]
+    tem = z.max(axis = 1)
+    global_list.append(tem)
+    y = y + m
+
+print(global_list)
+
+# ---------------------------------------------------------------------------------------------------------------------------------------------------
+
+def signature(j):
+    if j == 0:
+        j = "disp_in_x"
+    elif j == 1:
+        j = "disp_in_y"
+    elif j == 2:
+        j = "disp_in_z"
+    elif j == 3:
+        j = "rot_about_x"
+    elif j == 4:
+        j = "rot_about_y"
+    elif j == 5:
+        j = "rot_about_z"
+    return j
+
+
+# # ---------------------------------------------------------------------------------------------
+n =[]
+a = []
+for t in global_list:
+    a.append(t)
+    # print(t)
+print(a)
+
+
+d = 0
+for b in a:
+    for i in range(d, d + m):
+            for j in range(6):
+                    if q.iat[i,j] == b[i]:
+                        print(i, j)
+                        kl = signature(j)
+                        # print(i, kl)
+                        n.append(kl)
+    
+    d = d + m
+
+print(n)
+
+# ------------------------------------------------------------------------------------------------
+
+m = []
+for i in range(no_of_modes):
+    temp = "Mode_shape_"+str(i+1)
+    m.append(temp)
+print(m)
+
+# -----------------------------------------------------------------------------------------------
+
+split_list = [10, 20, 30, 40, 50]
+ 
+res = [n[i : j] for i, j in zip([0] +
+          split_list, split_list + [None])]
+ 
+# printing result
+print ("The splitted lists are : " +  str(res))
